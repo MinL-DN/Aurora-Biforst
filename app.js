@@ -1,8 +1,9 @@
-var app = require('koa')()
-  , logger = require('koa-logger')
-  , json = require('koa-json')
-  , views = require('koa-views')
-  , onerror = require('koa-onerror');
+var app = require('koa')();
+var logger = require('koa-logger')();
+var json = require('koa-json')();
+var views = require('koa-views');
+var onerror = require('koa-onerror');
+var compose = require('koa-compose');
 
 var index = require('./routes/index');
 var users = require('./routes/users');
@@ -11,13 +12,16 @@ var users = require('./routes/users');
 onerror(app);
 
 // global middlewares
+var mw = compose([
+  logger
+]);
 app.use(views('views', {
   root: __dirname + '/views',
   default: 'jade'
 }));
 app.use(require('koa-bodyparser')());
-app.use(json());
-app.use(logger());
+app.use(json);
+app.use(logger);
 
 app.use(function *(next){
   var start = new Date;
