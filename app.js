@@ -1,36 +1,38 @@
 var app = require('koa')();
-var logger = require('koa-logger')();
-var json = require('koa-json')();
 var views = require('koa-views');
 var onerror = require('koa-onerror');
 var compose = require('koa-compose');
+var routers = require('koa-router');
 
-var index = require('./routes/index');
-var users = require('./routes/users');
+var config = require('./config');
 
 // error handler
 onerror(app);
 
 // global middlewares
-var mw = compose([
-  logger
-]);
-app.use(views('views', {
-  root: __dirname + '/views',
-  default: 'jade'
-}));
-app.use(require('koa-bodyparser')());
-app.use(json);
-app.use(logger);
+app.use(compose([
+    // 视图
+    views('views', {
+        root: __dirname + '/views',
+        default: 'jade'
+    }),
+    require('koa-bodyparser')(),
+    require('koa-json')(),
+    require('koa-logger')(),
+    // 输出
+    function *(next){
+        var start = new Date;
+        yield next;
+        var ms = new Date - start;
+        console.log('%s %s - %s', this.method, this.url, ms);
+    },
+    // 静态文件
+    require('koa-static')(__dirname + '/public'),
+    // router
+]));
 
-app.use(function *(next){
-  var start = new Date;
-  yield next;
-  var ms = new Date - start;
-  console.log('%s %s - %s', this.method, this.url, ms);
-});
-
-app.use(require('koa-static')(__dirname + '/public'));
+var index = require('./routes/index');
+var users = require('./routes/users');
 
 // routes definition
 app.use(index.routes(), index.allowedMethods());
